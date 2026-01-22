@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>序列号二维码生成器</title>
+    <script src="https://cdn.bootcss.com/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            /* 渐变主色 */
+            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            --primary-dark: #4F46E5;
+            --primary-light: #EEF2FF;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --light: #F8FAFC;
+            --white: #FFFFFF;
+            --dark: #1E293B;
+            --gray: #64748B;
+            --gray-light: #CBD5E1;
+            --border-radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.25s ease;
+        }
+        
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', sans-serif; 
+        }
+        
+        body { 
+            background: var(--light);
+            min-height: 100vh; 
+            padding: 16px;
+            color: var(--dark);
+        }
+        
+        /* 单个二维码悬浮区域 */
+        .floating-qr-section {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            padding: 20px;
+            border: 1px solid var(--gray-light);
+            opacity: 0;
+            transform: translateX(-50%) translateY(-16px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none;
+        }
+        
+        .floating-qr-section.visible {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .floating-qr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .floating-qr-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .floating-qr-title .icon {
+            background: var(--primary-gradient);
+            color: var(--white);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .close-floating-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        
+        .close-floating-btn:hover {
+            background: var(--light);
+            color: var(--danger);
+        }
+        
+        .floating-qr-content {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .floating-qr-code-container {
+            background: var(--white);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--gray-light);
+            flex-shrink: 0;
+        }
+        
+        .floating-qr-info {
+            flex: 1;
+        }
+        
+        .floating-qr-text {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+        
+        .floating-qr-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .floating-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--white);
+        }
+        
+        .floating-btn-download {
+            background: var(--primary-gradient);
+        }
+        
+        .floating-btn-copy {
+            background: var(--gray);
+        }
+        
+        .floating-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        /* 批量二维码悬浮区域 */
+        .floating-batch-qr-section {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            padding: 20px;
+            border: 1px solid var(--gray-light);
+            opacity: 0;
+            transform: translateX(-50%) translateY(-16px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none;
+        }
+        
+        .floating-batch-qr-section.visible {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .floating-batch-qr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .floating-batch-qr-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .floating-batch-qr-title .icon {
+            background: var(--primary-gradient);
+            color: var(--white);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .floating-batch-close-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.4rem;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        
+        .floating-batch-close-btn:hover {
+            background: var(--light);
+            color: var(--danger);
+        }
+        
+        /* 批量二维码滚动容器 */
+        .floating-batch-scroll-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .floating-batch-scroll-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .floating-batch-scroll-container::-webkit-scrollbar-track {
+            background: var(--light);
+            border-radius: 2px;
+        }
+        
+        .floating-batch-scroll-container::-webkit-scrollbar-thumb {
+            background: var(--gray-light);
+            border-radius: 2px;
+        }
+        
+        .floating-batch-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: var(--gray);
+        }
+        
+        /* 批量二维码网格 */
+        .floating-batch-qr-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .floating-batch-qr-item {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-light);
+            transition: var(--transition);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 130px;
+        }
+        
+        .floating-batch-qr-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .floating-batch-qr-code {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--white);
+            border-radius: 8px;
+            padding: 6px;
+            border: 1px solid var(--gray-light);
+        }
+        
+        .floating-batch-qr-text {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--dark);
+            word-break: break-all;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+            max-height: 2.4em;
+        }
+        
+        /* 主容器 */
+        .container { 
+            background: var(--white); 
+            width: 100%; 
+            max-width: 480px; 
+            border-radius: 16px; 
+            box-shadow: var(--shadow); 
+            overflow: hidden;
+            margin: 16px auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 应用头部（渐变核心） */
+        .app-header {
+            text-align: center;
+            padding: 24px 20px 0;
+            background: var(--primary-gradient);
+            color: var(--white);
+            position: relative;
+        }
+        
+        .app-header h1 { 
+            margin-bottom: 8px; 
+            font-size: 1.4rem; 
+            font-weight: 600;
+        }
+        
+        .app-header .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+        
+        /* 标签页导航 */
+        .tab-nav {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+        }
+        
+        .tab-btn.active {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--white);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        /* 标签页内容 */
+        .tab-content {
+            display: none;
+            padding: 24px 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 功能区域标题 */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--dark);
+            margin-bottom: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .section-title .icon {
+            background: var(--primary-gradient);
+            color: var(--white);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        /* 输入区域 */
+        .input-area {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--gray-light);
+        }
+        
+        .input-field {
+            margin-bottom: 16px;
+        }
+        
+        .input-field label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .input-field input, .input-field textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--gray-light);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            background: var(--white);
+            color: var(--dark);
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+        
+        .input-field input:focus, .input-field textarea:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+        
+        .input-field textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.4;
+        }
+        
+        /* 行内输入组（递增批量用） */
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .input-row .input-field {
+            flex: 1;
+        }
+        
+        /* 当前字符串显示 */
+        .current-string-display {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            border: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .current-string-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .current-string-value {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+            word-break: break-all;
+            text-align: right;
+            flex: 1;
+            margin-left: 12px;
+        }
+        
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--white);
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-gray {
+            background: var(--gray);
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 批量操作按钮组 */
+        .batch-action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+        }
+        
+        .spinner {
+            border: 2px solid var(--gray-light);
+            border-top: 2px solid var(--primary-dark);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 消息提示 */
+        .notification {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: var(--success);
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 2000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 300px;
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .notification.info {
+            background: var(--primary-gradient);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .floating-qr-section,
+            .floating-batch-qr-section {
+                top: 12px;
+                padding: 16px;
+                max-width: calc(100% - 24px);
+            }
+            
+            .floating-qr-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+            
+            .floating-batch-qr-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .floating-batch-qr-item {
+                height: 120px;
+            }
+            
+            .floating-batch-qr-code {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .container {
+                max-width: 100%;
+                border-radius: 12px;
+                margin-top: 12px;
+            }
+            
+            .app-header {
+                padding: 20px 16px 0;
+            }
+            
+            .tab-content {
+                padding: 20px 16px;
+            }
+            
+            .input-area {
+                padding: 16px;
+            }
+            
+            .action-buttons,
+            .batch-action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .floating-batch-qr-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 信息提示 */
+        .info-note {
+            text-align: center;
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            border: 1px dashed var(--gray-light);
+        }
+        
+        /* 悬浮区域导航按钮 */
+        .floating-nav-btn {
+            background: none;
+            border: none;
+            color: var(--primary-dark);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+            margin-right: 8px;
+        }
+        
+        .floating-nav-btn:hover {
+            background: var(--primary-light);
+        }
+        
+        /* 批量区域底部操作栏 */
+        .floating-batch-bottom-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-light);
+        }
+        
+        .batch-count {
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- 单个二维码悬浮区域 -->
+    <div class="floating-qr-section" id="floating-qr-section">
+        <div class="floating-qr-header">
+            <div class="floating-qr-title">
+                <div class="icon">🔲</div>
+                <span>单个二维码</span>
+            </div>
+            <div>
+                <button class="floating-nav-btn" id="show-floating-batch-btn">查看批量</button>
+                <button class="close-floating-btn" id="close-floating-btn">×</button>
+            </div>
+        </div>
+        <div class="floating-qr-content">
+            <div class="floating-qr-code-container">
+                <div id="floating-qrcode"></div>
+            </div>
+            <div class="floating-qr-info">
+                <div class="floating-qr-text" id="floating-qr-text">XX000000</div>
+                <div class="floating-qr-actions">
+                    <button class="floating-btn floating-btn-download" id="floating-download-btn">
+                        <span>💾</span> 下载
+                    </button>
+                    <button class="floating-btn floating-btn-copy" id="floating-copy-btn">
+                        <span>📋</span> 复制
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量二维码悬浮区域 -->
+    <div class="floating-batch-qr-section" id="floating-batch-qr-section">
+        <div class="floating-batch-qr-header">
+            <div class="floating-batch-qr-title">
+                <div class="icon">📦</div>
+                <span>批量二维码</span>
+            </div>
+            <div>
+                <button class="floating-nav-btn" id="show-floating-single-btn">查看单个</button>
+                <button class="floating-batch-close-btn" id="floating-batch-close-btn">×</button>
+            </div>
+        </div>
+        
+        <div class="floating-batch-scroll-container" id="floating-batch-scroll-container">
+            <div class="floating-batch-qr-grid" id="floating-batch-qr-grid"></div>
+        </div>
+        
+        <div class="floating-batch-bottom-actions">
+            <div class="batch-count" id="batch-count-display">共 0 个二维码</div>
+            <div class="floating-batch-qr-actions">
+                <button class="floating-btn floating-btn-download" id="floating-batch-download-all-btn">
+                    <span>📥</span> 批量下载
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主应用容器 -->
+    <div class="container">
+        <!-- 应用头部 -->
+        <div class="app-header">
+            <h1>序列号二维码生成器</h1>
+            <p class="subtitle">单个/批量/智能递增，一键生成</p>
+            
+            <!-- 标签页导航 -->
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="single">
+                    <span>🔢</span> 单个生成
+                </button>
+                <button class="tab-btn" data-tab="batch">
+                    <span>📦</span> 批量生成
+                </button>
+                <button class="tab-btn" data-tab="auto">
+                    <span>🔄</span> 递增批量
+                </button>
+            </div>
+        </div>
+        
+        <!-- 单个生成页面 -->
+        <div class="tab-content active" id="single-tab">
+            <div class="section-title">
+                <div class="icon">✏️</div>
+                <span>输入序列号</span>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-field">
+                    <label for="single-input">自定义序列号</label>
+                    <input type="text" id="single-input" placeholder="例如：SN20260001">
+                </div>
+                
+                <div class="current-string-display">
+                    <div class="current-string-label">当前序列号：</div>
+                    <div class="current-string-value" id="single-current-string">—</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="single-generate-btn">
+                        <span>⚡</span> 生成二维码
+                    </button>
+                    <button class="btn btn-success" id="single-increment-btn">
+                        <span>⬆️</span> 递增
+                    </button>
+                    <button class="btn btn-danger" id="single-decrement-btn">
+                        <span>⬇️</span> 递减
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>输入序列号后点击生成，二维码将在顶部悬浮显示</p>
+                <p>关闭悬浮窗会清空当前输入框</p>
+            </div>
+        </div>
+        
+        <!-- 批量生成页面 -->
+        <div class="tab-content" id="batch-tab">
+            <div class="section-title">
+                <div class="icon">📝</div>
+                <span>输入多个序列号</span>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-field">
+                    <label for="batch-input">每行一个序列号</label>
+                    <textarea id="batch-input" placeholder="例如：
+SN20260001
+SN20260002
+SN20260003
+SN20260004
+SN20260005"></textarea>
+                </div>
+                
+                <div class="batch-action-buttons">
+                    <button class="btn btn-primary" id="batch-generate-btn">
+                        <span>🔄</span> 批量生成
+                    </button>
+                    <button class="btn btn-warning" id="clear-input-btn">
+                        <span>🧹</span> 清空输入
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>点击批量生成后，所有二维码将在顶部悬浮显示</p>
+                <p>关闭悬浮窗会清空批量输入框</p>
+            </div>
+            
+            <div class="loading" id="batch-loading">
+                <div class="spinner"></div>
+                <div>正在生成二维码...</div>
+            </div>
+        </div>
+        
+        <!-- 智能递增批量生成页面 -->
+        <div class="tab-content" id="auto-tab">
+            <div class="section-title">
+                <div class="icon">🔄</div>
+                <span>智能递增批量生成</span>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-field">
+                    <label for="auto-start">起始序列号</label>
+                    <input type="text" id="auto-start" placeholder="例如：SN20260001">
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-field">
+                        <label for="auto-count">生成数量</label>
+                        <input type="number" id="auto-count" min="1" max="100" value="5" placeholder="1-100">
+                    </div>
+                    <div class="input-field">
+                        <label for="auto-step">递增步长</label>
+                        <input type="number" id="auto-step" min="1" max="10" value="1" placeholder="1-10">
+                    </div>
+                </div>
+                
+                <div class="current-string-display">
+                    <div class="current-string-label">生成范围：</div>
+                    <div class="current-string-value" id="auto-range-display">—</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="auto-generate-btn">
+                        <span>🚀</span> 生成并批量二维码
+                    </button>
+                    <button class="btn btn-warning" id="auto-clear-btn">
+                        <span>🧹</span> 清空
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>输入起始号、数量、步长，自动生成连续序列号</p>
+                <p>生成后直接打开批量二维码悬浮窗</p>
+            </div>
+            
+            <div class="loading" id="auto-loading">
+                <div class="spinner"></div>
+                <div>正在生成序列号...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化变量
+        let currentString = "";
+        let currentQRCodeData = null;
+        let batchQRCodes = [];
+        
+        // 标签页切换（关键修改：切换时隐藏所有浮窗）
+        function setupTabSwitching() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 切换标签时，先隐藏所有浮窗
+                    hideAllFloatingSections();
+                    
+                    const tabId = btn.getAttribute('data-tab');
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+        }
+        
+        // 隐藏所有浮窗（新增）
+        function hideAllFloatingSections() {
+            document.getElementById('floating-qr-section').classList.remove('visible');
+            document.getElementById('floating-batch-qr-section').classList.remove('visible');
+        }
+        
+        // 更新单个显示
+        function updateSingleDisplay() {
+            currentString = document.getElementById('single-input').value.trim();
+            document.getElementById('single-current-string').textContent = currentString || "—";
+            return currentString;
+        }
+        
+        // 生成单个二维码
+        function generateSingleQRCode() {
+            const text = updateSingleDisplay();
+            if (!text) {
+                showNotification('请输入序列号', 'error');
+                return;
+            }
+            if (typeof QRCode === 'undefined') {
+                showNotification('二维码库加载失败', 'error');
+                return;
+            }
+            currentQRCodeData = { text, source: 'single' };
+            showFloatingQRCode(text);
+            showNotification('二维码生成成功');
+        }
+        
+        // 显示单个悬浮二维码
+        function showFloatingQRCode(text) {
+            document.getElementById('floating-qr-text').textContent = text;
+            document.getElementById('floating-qrcode').innerHTML = '';
+            try {
+                new QRCode(document.getElementById("floating-qrcode"), {
+                    text, width: 120, height: 120,
+                    colorDark: "#1E293B", colorLight: "#FFFFFF",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (e) {
+                document.getElementById('floating-qrcode').innerHTML = 
+                    '<div style="color:#EF4444; font-size:12px; padding:16px;">生成失败</div>';
+            }
+            const section = document.getElementById('floating-qr-section');
+            section.classList.add('visible');
+            document.getElementById('floating-batch-qr-section').classList.remove('visible');
+        }
+        
+        // 显示批量悬浮
+        function showFloatingBatchQRSection() {
+            const section = document.getElementById('floating-batch-qr-section');
+            section.classList.add('visible');
+            document.getElementById('floating-qr-section').classList.remove('visible');
+        }
+        
+        // 隐藏单个悬浮 + 清空输入 + 重置数据
+        function hideFloatingQRCode() {
+            const section = document.getElementById('floating-qr-section');
+            section.classList.remove('visible');
+            document.getElementById('single-input').value = "";
+            updateSingleDisplay();
+            currentQRCodeData = null; // 重置单个二维码数据
+        }
+        
+        // 隐藏批量悬浮 + 清空所有批量输入 + 重置批量数据（关键修改）
+        function hideFloatingBatchQRCode() {
+            const section = document.getElementById('floating-batch-qr-section');
+            section.classList.remove('visible');
+            
+            // 清空所有批量相关输入
+            document.getElementById('batch-input').value = "";
+            document.getElementById('auto-start').value = "";
+            document.getElementById('auto-count').value = 5;
+            document.getElementById('auto-step').value = 1;
+            document.getElementById('auto-range-display').textContent = "—";
+            
+            // 清空批量二维码容器 + 重置数据
+            document.getElementById('floating-batch-qr-grid').innerHTML = "";
+            batchQRCodes = [];
+            updateBatchCountDisplay(0);
+        }
+        
+        // 下载单个
+        function downloadFloatingQRCode() {
+            const canvas = document.querySelector('#floating-qrcode canvas');
+            if (!canvas) { showNotification('未找到二维码', 'error'); return; }
+            const text = document.getElementById('floating-qr-text').textContent;
+            const a = document.createElement('a');
+            a.download = `二维码_${text}.png`;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+            showNotification('二维码已下载');
+        }
+        
+        // 批量下载
+        function downloadFloatingBatchAllQRCodes() {
+            if (batchQRCodes.length === 0) { showNotification('无二维码可下载', 'error'); return; }
+            showNotification(`开始下载 ${batchQRCodes.length} 个`, 'info');
+            setTimeout(() => {
+                batchQRCodes.forEach((item, i) => {
+                    setTimeout(() => {
+                        const a = document.createElement('a');
+                        a.download = `二维码_${item.text}.png`;
+                        a.href = item.canvas.toDataURL('image/png');
+                        a.click();
+                        if (i === batchQRCodes.length - 1) {
+                            setTimeout(() => showNotification(`已下载 ${batchQRCodes.length} 个`), 500);
+                        }
+                    }, i * 300);
+                });
+            }, 800);
+        }
+        
+        // 复制文本
+        function copyFloatingQRText() {
+            const text = document.getElementById('floating-qr-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('已复制到剪贴板');
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showNotification('已复制到剪贴板');
+            });
+        }
+        
+        // 智能递增
+        function incrementString(str, step = 1) {
+            const match = str.match(/(\d+)$/);
+            if (!match) return str;
+            const num = parseInt(match[1]);
+            const newNum = num + step;
+            const padded = newNum.toString().padStart(match[1].length, '0');
+            return str.replace(/(\d+)$/, padded);
+        }
+        
+        // 智能递减
+        function decrementString(str, step = 1) {
+            const match = str.match(/(\d+)$/);
+            if (!match) return str;
+            const num = parseInt(match[1]);
+            if (num <= 0) return str;
+            const newNum = num - step;
+            const padded = newNum.toString().padStart(match[1].length, '0');
+            return str.replace(/(\d+)$/, padded);
+        }
+        
+        // 单个递增
+        function singleIncrement() {
+            let str = document.getElementById('single-input').value.trim();
+            if (!str) { showNotification('请先输入序列号', 'error'); return; }
+            str = incrementString(str, 1);
+            document.getElementById('single-input').value = str;
+            generateSingleQRCode();
+        }
+        
+        // 单个递减
+        function singleDecrement() {
+            let str = document.getElementById('single-input').value.trim();
+            if (!str) { showNotification('请先输入序列号', 'error'); return; }
+            str = decrementString(str, 1);
+            document.getElementById('single-input').value = str;
+            generateSingleQRCode();
+        }
+        
+        // 清空批量输入
+        function clearBatchInput() {
+            document.getElementById('batch-input').value = "";
+            showNotification('已清空批量输入');
+        }
+        
+        // 清空递增批量
+        function clearAutoInput() {
+            document.getElementById('auto-start').value = "";
+            document.getElementById('auto-count').value = 5;
+            document.getElementById('auto-step').value = 1;
+            document.getElementById('auto-range-display').textContent = "—";
+            showNotification('已清空递增批量');
+        }
+        
+        // 通知
+        function showNotification(msg, type = 'info') {
+            const old = document.querySelector('.notification');
+            if (old) {
+                old.style.animation = 'slideOut 0.3s';
+                setTimeout(() => old.remove(), 300);
+            }
+            const n = document.createElement('div');
+            n.className = `notification ${type}`;
+            n.innerHTML = `<span>${type === 'error' ? '❌' : '✅'}</span><span>${msg}</span>`;
+            document.body.appendChild(n);
+            setTimeout(() => {
+                n.style.animation = 'slideOut 0.3s';
+                setTimeout(() => n.remove(), 300);
+            }, 3000);
+        }
+        
+        // 更新批量计数
+        function updateBatchCountDisplay(count) {
+            document.getElementById('batch-count-display').textContent = `共 ${count} 个二维码`;
+        }
+        
+        // 批量生成二维码
+        function generateBatchQRCodes(lines) {
+            if (lines.length === 0) { showNotification('无有效序列号', 'error'); return; }
+            document.getElementById('batch-loading').style.display = 'block';
+            document.getElementById('batch-generate-btn').disabled = true;
+            batchQRCodes = [];
+            const grid = document.getElementById('floating-batch-qr-grid');
+            grid.innerHTML = ''; // 先清空旧的批量二维码
+            
+            setTimeout(() => {
+                try {
+                    lines.forEach((text, i) => {
+                        const item = document.createElement('div');
+                        item.className = 'floating-batch-qr-item';
+                        item.title = text;
+                        
+                        const codeContainer = document.createElement('div');
+                        codeContainer.className = 'floating-batch-qr-code';
+                        codeContainer.id = `batch-qr-${i}`;
+                        
+                        const textEl = document.createElement('div');
+                        textEl.className = 'floating-batch-qr-text';
+                        textEl.textContent = text;
+                        
+                        item.appendChild(codeContainer);
+                        item.appendChild(textEl);
+                        grid.appendChild(item);
+                        
+                        try {
+                            new QRCode(codeContainer, {
+                                text, width: 80, height: 80,
+                                colorDark: "#1E293B", colorLight: "#FFFFFF",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                            setTimeout(() => {
+                                const canvas = codeContainer.querySelector('canvas');
+                                if (canvas) batchQRCodes.push({ text, canvas, index: i });
+                            }, 100);
+                        } catch (e) {
+                            codeContainer.innerHTML = '<div style="color:#EF4444; font-size:10px;">失败</div>';
+                        }
+                        
+                        item.onclick = () => showFloatingQRCode(text);
+                    });
+                    
+                    document.getElementById('batch-loading').style.display = 'none';
+                    document.getElementById('batch-generate-btn').disabled = false;
+                    updateBatchCountDisplay(lines.length);
+                    showFloatingBatchQRSection();
+                    showNotification(`成功生成 ${lines.length} 个二维码`);
+                } catch (e) {
+                    document.getElementById('batch-loading').style.display = 'none';
+                    document.getElementById('batch-generate-btn').disabled = false;
+                    showNotification('生成出错', 'error');
+                }
+            }, 100);
+        }
+        
+        // 从批量输入生成
+        function generateFromBatchInput() {
+            const input = document.getElementById('batch-input').value;
+            const lines = input.split('\n').map(l => l.trim()).filter(l => l);
+            generateBatchQRCodes(lines);
+        }
+        
+        // 智能递增批量生成
+        function generateAutoBatch() {
+            const start = document.getElementById('auto-start').value.trim();
+            const count = parseInt(document.getElementById('auto-count').value) || 5;
+            const step = parseInt(document.getElementById('auto-step').value) || 1;
+            
+            if (!start) { showNotification('请输入起始序列号', 'error'); return; }
+            if (count < 1 || count > 100) { showNotification('数量 1-100', 'error'); return; }
+            if (step < 1 || step > 10) { showNotification('步长 1-10', 'error'); return; }
+            
+            document.getElementById('auto-loading').style.display = 'block';
+            document.getElementById('auto-generate-btn').disabled = true;
+            
+            setTimeout(() => {
+                try {
+                    const list = [];
+                    let current = start;
+                    list.push(current);
+                    for (let i = 1; i < count; i++) {
+                        current = incrementString(current, step);
+                        list.push(current);
+                    }
+                    
+                    const last = list[list.length - 1];
+                    document.getElementById('auto-range-display').textContent = `${start} ~ ${last}`;
+                    
+                    generateBatchQRCodes(list);
+                    
+                    document.getElementById('auto-loading').style.display = 'none';
+                    document.getElementById('auto-generate-btn').disabled = false;
+                } catch (e) {
+                    document.getElementById('auto-loading').style.display = 'none';
+                    document.getElementById('auto-generate-btn').disabled = false;
+                    showNotification('生成出错', 'error');
+                }
+            }, 300);
+        }
+        
+        // 切换到单个悬浮
+        function showFloatingSingleQRSection() {
+            const section = document.getElementById('floating-qr-section');
+            section.classList.add('visible');
+            document.getElementById('floating-batch-qr-section').classList.remove('visible');
+            if (!document.querySelector('#floating-qrcode canvas')) {
+                const text = document.getElementById('single-input').value.trim() || "XX000000";
+                showFloatingQRCode(text);
+            }
+        }
+        
+        // 事件绑定
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTabSwitching();
+            
+            // 单个
+            document.getElementById('single-generate-btn').addEventListener('click', generateSingleQRCode);
+            document.getElementById('single-increment-btn').addEventListener('click', singleIncrement);
+            document.getElementById('single-decrement-btn').addEventListener('click', singleDecrement);
+            document.getElementById('single-input').addEventListener('input', updateSingleDisplay);
+            
+            // 批量
+            document.getElementById('batch-generate-btn').addEventListener('click', generateFromBatchInput);
+            document.getElementById('clear-input-btn').addEventListener('click', clearBatchInput);
+            
+            // 递增批量
+            document.getElementById('auto-generate-btn').addEventListener('click', generateAutoBatch);
+            document.getElementById('auto-clear-btn').addEventListener('click', clearAutoInput);
+            
+            // 悬浮操作
+            document.getElementById('close-floating-btn').addEventListener('click', hideFloatingQRCode);
+            document.getElementById('floating-download-btn').addEventListener('click', downloadFloatingQRCode);
+            document.getElementById('floating-copy-btn').addEventListener('click', copyFloatingQRText);
+            
+            // 批量悬浮
+            document.getElementById('floating-batch-close-btn').addEventListener('click', hideFloatingBatchQRCode);
+            document.getElementById('floating-batch-download-all-btn').addEventListener('click', downloadFloatingBatchAllQRCodes);
+            
+            // 切换
+            document.getElementById('show-floating-batch-btn').addEventListener('click', showFloatingBatchQRSection);
+            document.getElementById('show-floating-single-btn').addEventListener('click', showFloatingSingleQRSection);
+            
+            updateSingleDisplay();
+        });
+    </script>
+</body>
+</html>
