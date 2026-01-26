@@ -7,20 +7,24 @@
     <script src="https://cdn.bootcss.com/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
-            /* 渐变主色 */
-            --primary-gradient: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-            --primary-dark: #4F46E5;
-            --primary-light: #EEF2FF;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --light: #F8FAFC;
-            --white: #FFFFFF;
-            --dark: #1E293B;
-            --gray: #64748B;
-            --gray-light: #CBD5E1;
+            /* 优化后的蓝白渐变色调 */
+            --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --primary-dark: #1a3362;
+            --primary-light: #4a6fa5;
+            --primary-ultralight: #e8f0fe;
+            --secondary: #0066cc;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --dark: #212529;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
             --border-radius: 12px;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
             --transition: all 0.25s ease;
         }
         
@@ -30,7 +34,7 @@
         }
         
         body { 
-            background: var(--light);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
             min-height: 100vh; 
             padding: 16px;
             color: var(--dark);
@@ -46,7 +50,7 @@
             max-width: 480px;
             background: var(--white);
             border-radius: 16px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             padding: 20px;
             border: 1px solid var(--gray-light);
@@ -170,50 +174,55 @@
             transform: translateY(-1px);
         }
         
-        /* 批量二维码悬浮区域 */
+        /* 批量二维码悬浮区域（铺满页面） */
         .floating-batch-qr-section {
             position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            background: var(--white);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            padding: 20px;
-            border: 1px solid var(--gray-light);
             opacity: 0;
-            transform: translateX(-50%) translateY(-16px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.3s ease;
             display: none;
+            overflow: hidden;
         }
         
         .floating-batch-qr-section.visible {
-            display: block;
+            display: flex;
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+        }
+        
+        .floating-batch-qr-content {
+            background: var(--white);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         .floating-batch-qr-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            padding: 16px 20px;
+            background: var(--primary-gradient);
+            color: var(--white);
+            flex-shrink: 0;
         }
         
         .floating-batch-qr-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--dark);
             display: flex;
             align-items: center;
             gap: 8px;
         }
         
         .floating-batch-qr-title .icon {
-            background: var(--primary-gradient);
+            background: rgba(255, 255, 255, 0.2);
             color: var(--white);
             width: 28px;
             height: 28px;
@@ -224,14 +233,21 @@
             font-size: 0.9rem;
         }
         
+        .floating-batch-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
         .floating-batch-close-btn {
-            background: none;
+            background: rgba(255, 255, 255, 0.2);
             border: none;
-            color: var(--gray);
-            font-size: 1.4rem;
+            color: var(--white);
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -240,30 +256,29 @@
         }
         
         .floating-batch-close-btn:hover {
-            background: var(--light);
-            color: var(--danger);
+            background: rgba(255, 255, 255, 0.3);
         }
         
         /* 批量二维码滚动容器 */
         .floating-batch-scroll-container {
-            max-height: 400px;
+            flex: 1;
             overflow-y: auto;
-            padding-right: 4px;
+            padding: 20px;
             margin-bottom: 16px;
         }
         
         .floating-batch-scroll-container::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
         }
         
         .floating-batch-scroll-container::-webkit-scrollbar-track {
             background: var(--light);
-            border-radius: 2px;
+            border-radius: 3px;
         }
         
         .floating-batch-scroll-container::-webkit-scrollbar-thumb {
             background: var(--gray-light);
-            border-radius: 2px;
+            border-radius: 3px;
         }
         
         .floating-batch-scroll-container::-webkit-scrollbar-thumb:hover {
@@ -273,16 +288,24 @@
         /* 批量二维码网格 */
         .floating-batch-qr-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 16px;
+        }
+        
+        /* 不同列数的网格布局 */
+        .floating-batch-qr-grid.cols-1 {
+            grid-template-columns: repeat(1, minmax(200px, 1fr));
+        }
+        
+        .floating-batch-qr-grid.cols-2 {
+            grid-template-columns: repeat(2, minmax(160px, 1fr));
         }
         
         .floating-batch-qr-item {
             background: var(--white);
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 12px;
+            padding: 16px;
             text-align: center;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-light);
             border: 1px solid var(--gray-light);
             transition: var(--transition);
             cursor: pointer;
@@ -290,46 +313,48 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 130px;
+            height: 220px;
         }
         
         .floating-batch-qr-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-light);
         }
         
         .floating-batch-qr-code {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 8px;
+            width: 100%;
+            max-width: 120px;
+            height: 120px;
+            margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: var(--white);
-            border-radius: 8px;
-            padding: 6px;
+            border-radius: 10px;
+            padding: 8px;
             border: 1px solid var(--gray-light);
         }
         
         .floating-batch-qr-text {
             font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             font-weight: 500;
             color: var(--dark);
             word-break: break-all;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.2;
-            max-height: 2.4em;
+            line-height: 1.3;
+            max-height: 2.6em;
         }
         
         /* 主容器 */
         .container { 
             background: var(--white); 
             width: 100%; 
-            max-width: 480px; 
-            border-radius: 16px; 
+            max-width: 500px; 
+            border-radius: 20px; 
             box-shadow: var(--shadow); 
             overflow: hidden;
             margin: 16px auto;
@@ -340,15 +365,16 @@
         /* 应用头部（渐变核心） */
         .app-header {
             text-align: center;
-            padding: 24px 20px 0;
+            padding: 28px 24px 0;
             background: var(--primary-gradient);
             color: var(--white);
             position: relative;
+            border-radius: 20px 20px 0 0;
         }
         
         .app-header h1 { 
             margin-bottom: 8px; 
-            font-size: 1.4rem; 
+            font-size: 1.5rem; 
             font-weight: 600;
         }
         
@@ -360,25 +386,33 @@
         
         /* 标签页导航 */
         .tab-nav {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px 10px 0 0;
+            border-radius: 12px 12px 0 0;
             overflow: hidden;
             margin-top: 8px;
         }
         
         .tab-btn {
-            flex: 1;
-            padding: 14px;
+            padding: 14px 8px;
             background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.8rem;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             text-align: center;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tab-btn span:first-child {
+            font-size: 1.1rem;
         }
         
         .tab-btn.active {
@@ -403,7 +437,7 @@
         /* 标签页内容 */
         .tab-content {
             display: none;
-            padding: 24px 20px;
+            padding: 24px;
         }
         
         .tab-content.active {
@@ -416,60 +450,60 @@
             align-items: center;
             gap: 8px;
             color: var(--dark);
-            margin-bottom: 16px;
-            font-size: 1rem;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
             font-weight: 600;
         }
         
         .section-title .icon {
             background: var(--primary-gradient);
             color: var(--white);
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         /* 输入区域 */
         .input-area {
             background: var(--light);
             border-radius: var(--border-radius);
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
             border: 1px solid var(--gray-light);
         }
         
         .input-field {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
         
         .input-field label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             color: var(--dark);
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
-        .input-field input, .input-field textarea {
+        .input-field input, .input-field textarea, .input-field select {
             width: 100%;
-            padding: 12px 14px;
+            padding: 12px 16px;
             border: 1px solid var(--gray-light);
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             transition: var(--transition);
             background: var(--white);
             color: var(--dark);
             font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
         }
         
-        .input-field input:focus, .input-field textarea:focus {
+        .input-field input:focus, .input-field textarea:focus, .input-field select:focus {
             outline: none;
             border-color: var(--primary-dark);
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.15);
         }
         
         .input-field textarea {
@@ -478,22 +512,42 @@
             line-height: 1.4;
         }
         
-        /* 行内输入组（递增批量用） */
+        /* 行内输入组 */
         .input-row {
             display: flex;
-            gap: 12px;
+            gap: 16px;
         }
         
         .input-row .input-field {
             flex: 1;
         }
         
+        /* 选择框组（每行几个用） */
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .select-group label {
+            white-space: nowrap;
+            font-size: 0.9rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+        
+        .select-group select {
+            max-width: 100px;
+            padding: 10px 14px;
+        }
+        
         /* 当前字符串显示 */
         .current-string-display {
             background: var(--white);
             border-radius: 8px;
-            padding: 12px 14px;
-            margin-top: 12px;
+            padding: 14px 16px;
+            margin-top: 16px;
             border: 1px solid var(--gray-light);
             display: flex;
             justify-content: space-between;
@@ -501,7 +555,7 @@
         }
         
         .current-string-label {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--gray);
         }
         
@@ -518,24 +572,24 @@
         
         /* 操作按钮 */
         .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
         }
         
         .btn {
-            flex: 1;
-            padding: 12px;
+            padding: 14px;
             border: none;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             color: var(--white);
         }
         
@@ -555,13 +609,18 @@
             background: var(--warning);
         }
         
+        .btn-info {
+            background: var(--info);
+        }
+        
         .btn-gray {
             background: var(--gray);
         }
         
         .btn:hover {
             opacity: 0.9;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .btn:active {
@@ -572,13 +631,15 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         
         /* 批量操作按钮组 */
         .batch-action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
         }
         
         /* 加载动画 */
@@ -610,7 +671,7 @@
             right: 16px;
             background: var(--success);
             color: var(--white);
-            padding: 12px 20px;
+            padding: 14px 20px;
             border-radius: 8px;
             box-shadow: var(--shadow);
             z-index: 2000;
@@ -618,8 +679,8 @@
             animation: slideIn 0.3s ease-out;
             display: flex;
             align-items: center;
-            gap: 8px;
-            max-width: 300px;
+            gap: 10px;
+            max-width: 320px;
         }
         
         .notification.error {
@@ -627,7 +688,7 @@
         }
         
         .notification.info {
-            background: var(--primary-gradient);
+            background: var(--info);
         }
         
         @keyframes slideIn {
@@ -640,77 +701,129 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
-        /* 响应式调整 */
-        @media (max-width: 480px) {
-            .floating-qr-section,
-            .floating-batch-qr-section {
-                top: 12px;
-                padding: 16px;
-                max-width: calc(100% - 24px);
-            }
-            
-            .floating-qr-content {
-                flex-direction: column;
-                text-align: center;
-                gap: 12px;
-            }
-            
-            .floating-batch-qr-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .floating-batch-qr-item {
-                height: 120px;
-            }
-            
-            .floating-batch-qr-code {
-                width: 70px;
-                height: 70px;
-            }
-            
-            .container {
-                max-width: 100%;
-                border-radius: 12px;
-                margin-top: 12px;
-            }
-            
-            .app-header {
-                padding: 20px 16px 0;
-            }
-            
-            .tab-content {
-                padding: 20px 16px;
-            }
-            
-            .input-area {
-                padding: 16px;
-            }
-            
-            .action-buttons,
-            .batch-action-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .input-row {
-                flex-direction: column;
-                gap: 12px;
-            }
+        /* 历史记录样式 */
+        .history-list {
+            margin-top: 16px;
         }
         
-        @media (max-width: 360px) {
-            .floating-batch-qr-grid {
-                grid-template-columns: 1fr;
-            }
+        .history-item {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--gray-light);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .history-item:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-item-title {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .history-item-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .history-item-content {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--dark);
+            word-break: break-all;
+        }
+        
+        .empty-history {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        /* 批量布局控制 */
+        .batch-layout-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: var(--light);
+            border-radius: 8px;
+            border: 1px solid var(--gray-light);
+        }
+        
+        .layout-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .layout-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .layout-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--gray-light);
+            background: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+        
+        .layout-btn.active {
+            background: var(--primary-gradient);
+            color: var(--white);
+            border-color: var(--primary-dark);
+        }
+        
+        .layout-btn:hover:not(.active) {
+            background: var(--primary-ultralight);
+            border-color: var(--primary-light);
+        }
+        
+        /* 批量区域底部操作栏 */
+        .floating-batch-bottom-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid var(--gray-light);
+            flex-shrink: 0;
+        }
+        
+        .batch-count {
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 500;
         }
         
         /* 信息提示 */
         .info-note {
             text-align: center;
             color: var(--gray);
-            font-size: 0.8rem;
-            margin-top: 16px;
-            padding: 12px;
+            font-size: 0.85rem;
+            margin-top: 20px;
+            padding: 14px;
             background: var(--light);
             border-radius: var(--border-radius);
             border: 1px dashed var(--gray-light);
@@ -724,30 +837,104 @@
             font-size: 0.85rem;
             font-weight: 500;
             cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             transition: var(--transition);
             margin-right: 8px;
         }
         
         .floating-nav-btn:hover {
-            background: var(--primary-light);
+            background: var(--primary-ultralight);
         }
         
-        /* 批量区域底部操作栏 */
-        .floating-batch-bottom-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--gray-light);
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .floating-qr-section {
+                top: 12px;
+                padding: 16px;
+                max-width: calc(100% - 24px);
+            }
+            
+            .floating-qr-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+            
+            .floating-batch-qr-item {
+                height: 200px;
+                padding: 14px;
+            }
+            
+            .floating-batch-qr-code {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .container {
+                max-width: 100%;
+                border-radius: 16px;
+                margin-top: 12px;
+            }
+            
+            .app-header {
+                padding: 24px 16px 0;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+            
+            .input-area {
+                padding: 20px;
+            }
+            
+            .action-buttons,
+            .batch-action-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .select-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .select-group select {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .tab-nav {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .tab-btn {
+                padding: 12px 4px;
+                font-size: 0.75rem;
+            }
+            
+            .tab-btn span:first-child {
+                font-size: 1rem;
+            }
         }
         
-        .batch-count {
-            font-size: 0.8rem;
-            color: var(--gray);
-            font-weight: 500;
+        @media (max-width: 360px) {
+            .floating-batch-qr-grid.cols-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .floating-batch-qr-item {
+                height: 220px;
+            }
+            
+            .tab-nav {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
@@ -782,29 +969,39 @@
         </div>
     </div>
     
-    <!-- 批量二维码悬浮区域 -->
+    <!-- 批量二维码悬浮区域（铺满页面） -->
     <div class="floating-batch-qr-section" id="floating-batch-qr-section">
-        <div class="floating-batch-qr-header">
-            <div class="floating-batch-qr-title">
-                <div class="icon">📦</div>
-                <span>批量二维码</span>
+        <div class="floating-batch-qr-content">
+            <div class="floating-batch-qr-header">
+                <div class="floating-batch-qr-title">
+                    <div class="icon">📦</div>
+                    <span>批量二维码</span>
+                </div>
+                <div class="floating-batch-header-actions">
+                    <button class="floating-batch-close-btn" id="floating-batch-close-btn" title="关闭">×</button>
+                </div>
             </div>
-            <div>
-                <button class="floating-nav-btn" id="show-floating-single-btn">查看单个</button>
-                <button class="floating-batch-close-btn" id="floating-batch-close-btn">×</button>
+            
+            <!-- 批量布局控制 -->
+            <div class="batch-layout-controls">
+                <div class="layout-label">每行显示数量：</div>
+                <div class="layout-buttons" id="layout-buttons">
+                    <button class="layout-btn active" data-cols="1">1</button>
+                    <button class="layout-btn" data-cols="2">2</button>
+                </div>
             </div>
-        </div>
-        
-        <div class="floating-batch-scroll-container" id="floating-batch-scroll-container">
-            <div class="floating-batch-qr-grid" id="floating-batch-qr-grid"></div>
-        </div>
-        
-        <div class="floating-batch-bottom-actions">
-            <div class="batch-count" id="batch-count-display">共 0 个二维码</div>
-            <div class="floating-batch-qr-actions">
-                <button class="floating-btn floating-btn-download" id="floating-batch-download-all-btn">
-                    <span>📥</span> 批量下载
-                </button>
+            
+            <div class="floating-batch-scroll-container" id="floating-batch-scroll-container">
+                <div class="floating-batch-qr-grid cols-1" id="floating-batch-qr-grid"></div>
+            </div>
+            
+            <div class="floating-batch-bottom-actions">
+                <div class="batch-count" id="batch-count-display">共 0 个二维码</div>
+                <div class="floating-batch-qr-actions">
+                    <button class="floating-btn floating-btn-download" id="floating-batch-download-all-btn">
+                        <span>📥</span> 批量下载
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -814,7 +1011,7 @@
         <!-- 应用头部 -->
         <div class="app-header">
             <h1>序列号二维码生成器</h1>
-            <p class="subtitle">单个/批量/智能递增，一键生成</p>
+            <p class="subtitle">智能生成，批量管理，历史追溯</p>
             
             <!-- 标签页导航 -->
             <div class="tab-nav">
@@ -824,17 +1021,20 @@
                 <button class="tab-btn" data-tab="batch">
                     <span>📦</span> 批量生成
                 </button>
-                <button class="tab-btn" data-tab="auto">
-                    <span>🔄</span> 递增批量
+                <button class="tab-btn" data-tab="range">
+                    <span>📊</span> 区间生成
+                </button>
+                <button class="tab-btn" data-tab="history">
+                    <span>📋</span> 历史记录
                 </button>
             </div>
         </div>
         
-        <!-- 单个生成页面 -->
+        <!-- 单个生成页面（合并了递增批量） -->
         <div class="tab-content active" id="single-tab">
             <div class="section-title">
                 <div class="icon">✏️</div>
-                <span>输入序列号</span>
+                <span>单个序列号生成</span>
             </div>
             
             <div class="input-area">
@@ -861,56 +1061,9 @@
                 </div>
             </div>
             
-            <div class="info-note">
-                <p>输入序列号后点击生成，二维码将在顶部悬浮显示</p>
-                <p>关闭悬浮窗会清空当前输入框</p>
-            </div>
-        </div>
-        
-        <!-- 批量生成页面 -->
-        <div class="tab-content" id="batch-tab">
-            <div class="section-title">
-                <div class="icon">📝</div>
-                <span>输入多个序列号</span>
-            </div>
-            
-            <div class="input-area">
-                <div class="input-field">
-                    <label for="batch-input">每行一个序列号</label>
-                    <textarea id="batch-input" placeholder="例如：
-SN20260001
-SN20260002
-SN20260003
-SN20260004
-SN20260005"></textarea>
-                </div>
-                
-                <div class="batch-action-buttons">
-                    <button class="btn btn-primary" id="batch-generate-btn">
-                        <span>🔄</span> 批量生成
-                    </button>
-                    <button class="btn btn-warning" id="clear-input-btn">
-                        <span>🧹</span> 清空输入
-                    </button>
-                </div>
-            </div>
-            
-            <div class="info-note">
-                <p>点击批量生成后，所有二维码将在顶部悬浮显示</p>
-                <p>关闭悬浮窗会清空批量输入框</p>
-            </div>
-            
-            <div class="loading" id="batch-loading">
-                <div class="spinner"></div>
-                <div>正在生成二维码...</div>
-            </div>
-        </div>
-        
-        <!-- 智能递增批量生成页面 -->
-        <div class="tab-content" id="auto-tab">
-            <div class="section-title">
+            <div class="section-title" style="margin-top: 32px;">
                 <div class="icon">🔄</div>
-                <span>智能递增批量生成</span>
+                <span>递增批量生成</span>
             </div>
             
             <div class="input-area">
@@ -930,6 +1083,14 @@ SN20260005"></textarea>
                     </div>
                 </div>
                 
+                <div class="select-group">
+                    <label for="auto-cols">每行显示：</label>
+                    <select id="auto-cols">
+                        <option value="1">1个</option>
+                        <option value="2">2个</option>
+                    </select>
+                </div>
+                
                 <div class="current-string-display">
                     <div class="current-string-label">生成范围：</div>
                     <div class="current-string-value" id="auto-range-display">—</div>
@@ -937,7 +1098,7 @@ SN20260005"></textarea>
                 
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="auto-generate-btn">
-                        <span>🚀</span> 生成并批量二维码
+                        <span>🚀</span> 生成批量二维码
                     </button>
                     <button class="btn btn-warning" id="auto-clear-btn">
                         <span>🧹</span> 清空
@@ -946,13 +1107,139 @@ SN20260005"></textarea>
             </div>
             
             <div class="info-note">
-                <p>输入起始号、数量、步长，自动生成连续序列号</p>
-                <p>生成后直接打开批量二维码悬浮窗</p>
+                <p>• 单个生成：输入序列号生成单个二维码，支持递增递减操作</p>
+                <p>• 递增批量：输入起始号、数量、步长，自动生成连续序列号</p>
+            </div>
+        </div>
+        
+        <!-- 批量生成页面 -->
+        <div class="tab-content" id="batch-tab">
+            <div class="section-title">
+                <div class="icon">📝</div>
+                <span>批量序列号生成</span>
             </div>
             
-            <div class="loading" id="auto-loading">
+            <div class="input-area">
+                <div class="input-field">
+                    <label for="batch-input">每行一个序列号（最多100个）</label>
+                    <textarea id="batch-input" placeholder="例如：
+SN20260001
+SN20260002
+SN20260003
+SN20260004
+SN20260005"></textarea>
+                </div>
+                
+                <div class="select-group">
+                    <label for="batch-cols">每行显示：</label>
+                    <select id="batch-cols">
+                        <option value="1">1个</option>
+                        <option value="2">2个</option>
+                    </select>
+                </div>
+                
+                <div class="batch-action-buttons">
+                    <button class="btn btn-primary" id="batch-generate-btn">
+                        <span>🔄</span> 批量生成
+                    </button>
+                    <button class="btn btn-warning" id="clear-input-btn">
+                        <span>🧹</span> 清空输入
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>• 每行输入一个序列号，点击批量生成即可生成所有二维码</p>
+                <p>• 可以自由选择每行显示1个或2个二维码</p>
+                <p>• 关闭批量悬浮窗会清空当前批量输入</p>
+            </div>
+            
+            <div class="loading" id="batch-loading">
+                <div class="spinner"></div>
+                <div>正在生成二维码...</div>
+            </div>
+        </div>
+        
+        <!-- 区间生成页面 -->
+        <div class="tab-content" id="range-tab">
+            <div class="section-title">
+                <div class="icon">📊</div>
+                <span>区间序列号生成</span>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-row">
+                    <div class="input-field">
+                        <label for="range-start">起始序列号</label>
+                        <input type="text" id="range-start" placeholder="例如：SN20260001">
+                    </div>
+                    <div class="input-field">
+                        <label for="range-end">结束序列号</label>
+                        <input type="text" id="range-end" placeholder="例如：SN20260010">
+                    </div>
+                </div>
+                
+                <div class="select-group">
+                    <label for="range-cols">每行显示：</label>
+                    <select id="range-cols">
+                        <option value="1">1个</option>
+                        <option value="2">2个</option>
+                    </select>
+                </div>
+                
+                <div class="current-string-display">
+                    <div class="current-string-label">生成数量：</div>
+                    <div class="current-string-value" id="range-count-display">—</div>
+                </div>
+                
+                <div class="batch-action-buttons">
+                    <button class="btn btn-primary" id="range-generate-btn">
+                        <span>🚀</span> 生成区间二维码
+                    </button>
+                    <button class="btn btn-warning" id="range-clear-btn">
+                        <span>🧹</span> 清空
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>• 输入起始和结束序列号，自动生成区间内所有序列号</p>
+                <p>• 系统会自动识别序列号中的数字部分进行递增</p>
+                <p>• 区间内最多支持100个序列号生成</p>
+            </div>
+            
+            <div class="loading" id="range-loading">
                 <div class="spinner"></div>
                 <div>正在生成序列号...</div>
+            </div>
+        </div>
+        
+        <!-- 历史记录页面 -->
+        <div class="tab-content" id="history-tab">
+            <div class="section-title">
+                <div class="icon">📋</div>
+                <span>历史生成记录</span>
+            </div>
+            
+            <div class="input-area">
+                <div class="history-list" id="history-list">
+                    <div class="empty-history">
+                        <p>暂无历史记录</p>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">生成二维码后，记录会显示在这里</p>
+                    </div>
+                </div>
+                
+                <div class="batch-action-buttons">
+                    <button class="btn btn-warning" id="clear-history-btn">
+                        <span>🗑️</span> 清空历史记录
+                    </button>
+                </div>
+            </div>
+            
+            <div class="info-note">
+                <p>• 每次生成的二维码都会自动保存到历史记录</p>
+                <p>• 点击历史记录可以重新查看对应的二维码</p>
+                <p>• 历史记录仅保存在当前浏览器会话中</p>
             </div>
         </div>
     </div>
@@ -962,8 +1249,10 @@ SN20260005"></textarea>
         let currentString = "";
         let currentQRCodeData = null;
         let batchQRCodes = [];
+        let historyRecords = []; // 历史记录数组
+        let currentCols = 1; // 默认每行1个
         
-        // 标签页切换（关键修改：切换时隐藏所有浮窗）
+        // 标签页切换（切换时隐藏所有浮窗）
         function setupTabSwitching() {
             const tabBtns = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -978,11 +1267,16 @@ SN20260005"></textarea>
                     btn.classList.add('active');
                     tabContents.forEach(c => c.classList.remove('active'));
                     document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // 如果是历史记录标签，刷新历史记录列表
+                    if (tabId === 'history') {
+                        refreshHistoryList();
+                    }
                 });
             });
         }
         
-        // 隐藏所有浮窗（新增）
+        // 隐藏所有浮窗
         function hideAllFloatingSections() {
             document.getElementById('floating-qr-section').classList.remove('visible');
             document.getElementById('floating-batch-qr-section').classList.remove('visible');
@@ -1008,6 +1302,10 @@ SN20260005"></textarea>
             }
             currentQRCodeData = { text, source: 'single' };
             showFloatingQRCode(text);
+            
+            // 添加到历史记录
+            addToHistory('single', text);
+            
             showNotification('二维码生成成功');
         }
         
@@ -1046,17 +1344,10 @@ SN20260005"></textarea>
             currentQRCodeData = null; // 重置单个二维码数据
         }
         
-        // 隐藏批量悬浮 + 清空所有批量输入 + 重置批量数据（关键修改）
+        // 隐藏批量悬浮 + 清空所有批量输入 + 重置批量数据
         function hideFloatingBatchQRCode() {
             const section = document.getElementById('floating-batch-qr-section');
             section.classList.remove('visible');
-            
-            // 清空所有批量相关输入
-            document.getElementById('batch-input').value = "";
-            document.getElementById('auto-start').value = "";
-            document.getElementById('auto-count').value = 5;
-            document.getElementById('auto-step').value = 1;
-            document.getElementById('auto-range-display').textContent = "—";
             
             // 清空批量二维码容器 + 重置数据
             document.getElementById('floating-batch-qr-grid').innerHTML = "";
@@ -1064,7 +1355,26 @@ SN20260005"></textarea>
             updateBatchCountDisplay(0);
         }
         
-        // 下载单个
+        // 设置批量网格列数
+        function setBatchGridCols(cols) {
+            currentCols = parseInt(cols);
+            const grid = document.getElementById('floating-batch-qr-grid');
+            
+            // 移除所有列数类
+            grid.classList.remove('cols-1', 'cols-2');
+            // 添加新的列数类
+            grid.classList.add(`cols-${currentCols}`);
+            
+            // 更新布局按钮状态
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.getAttribute('data-cols')) === currentCols) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        // 下载单个二维码
         function downloadFloatingQRCode() {
             const canvas = document.querySelector('#floating-qrcode canvas');
             if (!canvas) { showNotification('未找到二维码', 'error'); return; }
@@ -1165,6 +1475,14 @@ SN20260005"></textarea>
             showNotification('已清空递增批量');
         }
         
+        // 清空区间输入
+        function clearRangeInput() {
+            document.getElementById('range-start').value = "";
+            document.getElementById('range-end').value = "";
+            document.getElementById('range-count-display').textContent = "—";
+            showNotification('已清空区间输入');
+        }
+        
         // 通知
         function showNotification(msg, type = 'info') {
             const old = document.querySelector('.notification');
@@ -1188,13 +1506,22 @@ SN20260005"></textarea>
         }
         
         // 批量生成二维码
-        function generateBatchQRCodes(lines) {
+        function generateBatchQRCodes(lines, source = 'batch', cols = 1, title = '批量生成') {
             if (lines.length === 0) { showNotification('无有效序列号', 'error'); return; }
+            if (lines.length > 100) { 
+                showNotification('最多支持100个序列号', 'error'); 
+                lines = lines.slice(0, 100);
+            }
+            
+            // 显示加载
             document.getElementById('batch-loading').style.display = 'block';
             document.getElementById('batch-generate-btn').disabled = true;
             batchQRCodes = [];
             const grid = document.getElementById('floating-batch-qr-grid');
             grid.innerHTML = ''; // 先清空旧的批量二维码
+            
+            // 设置列数
+            setBatchGridCols(cols);
             
             setTimeout(() => {
                 try {
@@ -1217,7 +1544,7 @@ SN20260005"></textarea>
                         
                         try {
                             new QRCode(codeContainer, {
-                                text, width: 80, height: 80,
+                                text, width: 120, height: 120,
                                 colorDark: "#1E293B", colorLight: "#FFFFFF",
                                 correctLevel: QRCode.CorrectLevel.H
                             });
@@ -1236,7 +1563,11 @@ SN20260005"></textarea>
                     document.getElementById('batch-generate-btn').disabled = false;
                     updateBatchCountDisplay(lines.length);
                     showFloatingBatchQRSection();
-                    showNotification(`成功生成 ${lines.length} 个二维码`);
+                    
+                    // 添加到历史记录
+                    addToHistory(source, title, lines);
+                    
+                    showNotification(`成功生成 ${lines.length} 个二维码（每行${cols}个）`);
                 } catch (e) {
                     document.getElementById('batch-loading').style.display = 'none';
                     document.getElementById('batch-generate-btn').disabled = false;
@@ -1248,8 +1579,9 @@ SN20260005"></textarea>
         // 从批量输入生成
         function generateFromBatchInput() {
             const input = document.getElementById('batch-input').value;
+            const cols = document.getElementById('batch-cols').value;
             const lines = input.split('\n').map(l => l.trim()).filter(l => l);
-            generateBatchQRCodes(lines);
+            generateBatchQRCodes(lines, 'batch', cols, '手动批量生成');
         }
         
         // 智能递增批量生成
@@ -1257,6 +1589,7 @@ SN20260005"></textarea>
             const start = document.getElementById('auto-start').value.trim();
             const count = parseInt(document.getElementById('auto-count').value) || 5;
             const step = parseInt(document.getElementById('auto-step').value) || 1;
+            const cols = document.getElementById('auto-cols').value;
             
             if (!start) { showNotification('请输入起始序列号', 'error'); return; }
             if (count < 1 || count > 100) { showNotification('数量 1-100', 'error'); return; }
@@ -1276,15 +1609,83 @@ SN20260005"></textarea>
                     }
                     
                     const last = list[list.length - 1];
-                    document.getElementById('auto-range-display').textContent = `${start} ~ ${last}`;
+                    const rangeText = `${start} ~ ${last}`;
+                    document.getElementById('auto-range-display').textContent = rangeText;
                     
-                    generateBatchQRCodes(list);
+                    generateBatchQRCodes(list, 'auto', cols, `递增批量 ${start}~${last}`);
                     
                     document.getElementById('auto-loading').style.display = 'none';
                     document.getElementById('auto-generate-btn').disabled = false;
                 } catch (e) {
                     document.getElementById('auto-loading').style.display = 'none';
                     document.getElementById('auto-generate-btn').disabled = false;
+                    showNotification('生成出错', 'error');
+                }
+            }, 300);
+        }
+        
+        // 区间生成
+        function generateRangeBatch() {
+            const start = document.getElementById('range-start').value.trim();
+            const end = document.getElementById('range-end').value.trim();
+            const cols = document.getElementById('range-cols').value;
+            
+            if (!start) { showNotification('请输入起始序列号', 'error'); return; }
+            if (!end) { showNotification('请输入结束序列号', 'error'); return; }
+            
+            // 提取数字部分
+            const startMatch = start.match(/(\d+)$/);
+            const endMatch = end.match(/(\d+)$/);
+            
+            if (!startMatch || !endMatch) {
+                showNotification('序列号必须包含数字部分', 'error');
+                return;
+            }
+            
+            const prefix = start.substring(0, start.length - startMatch[1].length);
+            const endPrefix = end.substring(0, end.length - endMatch[1].length);
+            
+            if (prefix !== endPrefix) {
+                showNotification('起始和结束序列号的前缀必须相同', 'error');
+                return;
+            }
+            
+            const startNum = parseInt(startMatch[1]);
+            const endNum = parseInt(endMatch[1]);
+            
+            if (startNum > endNum) {
+                showNotification('起始序列号不能大于结束序列号', 'error');
+                return;
+            }
+            
+            const count = endNum - startNum + 1;
+            
+            if (count > 100) {
+                showNotification('区间内最多支持100个序列号', 'error');
+                return;
+            }
+            
+            document.getElementById('range-count-display').textContent = `${count} 个`;
+            document.getElementById('range-loading').style.display = 'block';
+            document.getElementById('range-generate-btn').disabled = true;
+            
+            setTimeout(() => {
+                try {
+                    const list = [];
+                    const numLength = startMatch[1].length;
+                    
+                    for (let i = startNum; i <= endNum; i++) {
+                        const numStr = i.toString().padStart(numLength, '0');
+                        list.push(prefix + numStr);
+                    }
+                    
+                    generateBatchQRCodes(list, 'range', cols, `区间生成 ${start}~${end}`);
+                    
+                    document.getElementById('range-loading').style.display = 'none';
+                    document.getElementById('range-generate-btn').disabled = false;
+                } catch (e) {
+                    document.getElementById('range-loading').style.display = 'none';
+                    document.getElementById('range-generate-btn').disabled = false;
                     showNotification('生成出错', 'error');
                 }
             }, 300);
@@ -1301,9 +1702,146 @@ SN20260005"></textarea>
             }
         }
         
+        // 初始化布局按钮事件
+        function setupLayoutButtons() {
+            const layoutButtons = document.querySelectorAll('.layout-btn');
+            layoutButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cols = btn.getAttribute('data-cols');
+                    setBatchGridCols(cols);
+                    showNotification(`已切换为每行${cols}个二维码`);
+                });
+            });
+        }
+        
+        // 历史记录功能
+        function addToHistory(type, title, items = []) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const dateStr = now.toLocaleDateString('zh-CN');
+            
+            let content = '';
+            if (type === 'single') {
+                content = title;
+            } else {
+                content = items.join(', ');
+                if (content.length > 100) {
+                    content = content.substring(0, 100) + '...';
+                }
+            }
+            
+            const record = {
+                id: Date.now(),
+                type,
+                title,
+                content,
+                items: type === 'single' ? [title] : items,
+                time: `${dateStr} ${timeStr}`,
+                cols: type === 'single' ? 1 : parseInt(document.getElementById(`${type}-cols`).value || 1)
+            };
+            
+            historyRecords.unshift(record); // 添加到开头
+            
+            // 限制最多保存20条记录
+            if (historyRecords.length > 20) {
+                historyRecords = historyRecords.slice(0, 20);
+            }
+            
+            // 保存到localStorage
+            localStorage.setItem('qrHistory', JSON.stringify(historyRecords));
+            
+            // 刷新历史列表
+            if (document.getElementById('history-tab').classList.contains('active')) {
+                refreshHistoryList();
+            }
+        }
+        
+        // 刷新历史记录列表
+        function refreshHistoryList() {
+            const historyList = document.getElementById('history-list');
+            
+            if (historyRecords.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-history">
+                        <p>暂无历史记录</p>
+                        <p style="font-size: 0.8rem; margin-top: 8px;">生成二维码后，记录会显示在这里</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = '';
+            
+            historyRecords.forEach(record => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.dataset.id = record.id;
+                
+                // 类型图标
+                let typeIcon = '🔢';
+                if (record.type === 'batch') typeIcon = '📦';
+                if (record.type === 'auto') typeIcon = '🔄';
+                if (record.type === 'range') typeIcon = '📊';
+                
+                item.innerHTML = `
+                    <div class="history-item-header">
+                        <div class="history-item-title">${typeIcon} ${record.title}</div>
+                        <div class="history-item-time">${record.time}</div>
+                    </div>
+                    <div class="history-item-content">${record.content}</div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    if (record.type === 'single') {
+                        // 单个二维码
+                        showFloatingQRCode(record.items[0]);
+                    } else {
+                        // 批量二维码
+                        generateBatchQRCodes(record.items, record.type, record.cols, record.title);
+                    }
+                });
+                
+                historyList.appendChild(item);
+            });
+        }
+        
+        // 清空历史记录
+        function clearHistory() {
+            if (historyRecords.length === 0) {
+                showNotification('没有历史记录可清空', 'info');
+                return;
+            }
+            
+            if (confirm('确定要清空所有历史记录吗？')) {
+                historyRecords = [];
+                localStorage.removeItem('qrHistory');
+                refreshHistoryList();
+                showNotification('历史记录已清空');
+            }
+        }
+        
+        // 加载历史记录
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem('qrHistory');
+                if (saved) {
+                    historyRecords = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('加载历史记录失败:', e);
+            }
+        }
+        
         // 事件绑定
         document.addEventListener('DOMContentLoaded', () => {
             setupTabSwitching();
+            setupLayoutButtons();
+            loadHistory();
             
             // 单个
             document.getElementById('single-generate-btn').addEventListener('click', generateSingleQRCode);
@@ -1319,6 +1857,13 @@ SN20260005"></textarea>
             document.getElementById('auto-generate-btn').addEventListener('click', generateAutoBatch);
             document.getElementById('auto-clear-btn').addEventListener('click', clearAutoInput);
             
+            // 区间生成
+            document.getElementById('range-generate-btn').addEventListener('click', generateRangeBatch);
+            document.getElementById('range-clear-btn').addEventListener('click', clearRangeInput);
+            
+            // 历史记录
+            document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
+            
             // 悬浮操作
             document.getElementById('close-floating-btn').addEventListener('click', hideFloatingQRCode);
             document.getElementById('floating-download-btn').addEventListener('click', downloadFloatingQRCode);
@@ -1330,9 +1875,13 @@ SN20260005"></textarea>
             
             // 切换
             document.getElementById('show-floating-batch-btn').addEventListener('click', showFloatingBatchQRSection);
-            document.getElementById('show-floating-single-btn').addEventListener('click', showFloatingSingleQRSection);
             
             updateSingleDisplay();
+            
+            // 初始化显示历史记录
+            if (document.getElementById('history-tab').classList.contains('active')) {
+                refreshHistoryList();
+            }
         });
     </script>
 </body>
